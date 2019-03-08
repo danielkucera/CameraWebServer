@@ -75,6 +75,8 @@ const char *password = "";
 #define HREF_GPIO_NUM     23
 #define PCLK_GPIO_NUM     22
 
+#define FLASH_LAMP_GPIO_NUM 4
+
 #else
 #error "Camera model not selected"
 #endif
@@ -145,7 +147,27 @@ void setup()
     Serial.print("Camera Ready! Use 'http://");
     Serial.print(WiFi.localIP());
     Serial.println("' to connect");
+
+#ifdef FLASH_LAMP_GPIO_NUM
+    pinMode(FLASH_LAMP_GPIO_NUM, OUTPUT);
+#endif
 }
+
+bool getFlashLampState()
+{
+#ifdef FLASH_LAMP_GPIO_NUM
+    return digitalRead(FLASH_LAMP_GPIO_NUM);
+#else
+    return false;
+#endif
+}
+void setFlashLamp(bool state)
+{
+#ifdef FLASH_LAMP_GPIO_NUM
+    digitalWrite (FLASH_LAMP_GPIO_NUM, state ? HIGH : LOW);	// turn on the LED
+#endif
+}
+
 
 void loop()
 {

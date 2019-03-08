@@ -63,6 +63,9 @@ static int8_t recognition_enabled = 0;
 static int8_t is_enrolling = 0;
 static face_id_list id_list = {0};
 
+extern bool getFlashLampState();
+extern void setFlashLamp(bool state);
+
 static ra_filter_t * ra_filter_init(ra_filter_t * filter, size_t sample_size){
     memset(filter, 0, sizeof(ra_filter_t));
 
@@ -520,6 +523,7 @@ static esp_err_t cmd_handler(httpd_req_t *req){
             detection_enabled = val;
         }
     }
+    else if(!strcmp(variable, "flash_lamp")) setFlashLamp(val);
     else {
         res = -1;
     }
@@ -566,6 +570,7 @@ static esp_err_t status_handler(httpd_req_t *req){
     p+=sprintf(p, "\"face_detect\":%u,", detection_enabled);
     p+=sprintf(p, "\"face_enroll\":%u,", is_enrolling);
     p+=sprintf(p, "\"face_recognize\":%u", recognition_enabled);
+    p+=sprintf(p, "\"flash_lamp\":%u,", getFlashLampState());
     *p++ = '}';
     *p++ = 0;
     httpd_resp_set_type(req, "application/json");
