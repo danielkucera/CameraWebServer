@@ -86,11 +86,10 @@ static size_t jpg_encode_stream(void * arg, size_t index, const void* data, size
 }
 
 static esp_err_t capture_handler(httpd_req_t *req){
-    camera_fb_t * fb = NULL;
     esp_err_t res = ESP_OK;
     int64_t fr_start = esp_timer_get_time();
 
-    fb = esp_camera_fb_get();
+    camera_fb_t *fb = esp_camera_fb_get();
     if (!fb) {
         Serial.println("Camera capture failed");
         httpd_resp_send_500(req);
@@ -100,9 +99,6 @@ static esp_err_t capture_handler(httpd_req_t *req){
     httpd_resp_set_type(req, "image/jpeg");
     httpd_resp_set_hdr(req, "Content-Disposition", "inline; filename=capture.jpg");
 
-    size_t out_len, out_width, out_height;
-    uint8_t * out_buf;
-    bool s;
     if(fb->width > 400){
         size_t fb_len = 0;
         if(fb->format == PIXFORMAT_JPEG){
@@ -128,12 +124,12 @@ static esp_err_t capture_handler(httpd_req_t *req){
         return ESP_FAIL;
     }
 
-    out_buf = image_matrix->item;
-    out_len = fb->width * fb->height * 3;
-    out_width = fb->width;
-    out_height = fb->height;
+    uint8_t *out_buf = image_matrix->item;
+    size_t out_len = fb->width * fb->height * 3;
+    size_t out_width = fb->width;
+    size_t out_height = fb->height;
 
-    s = fmt2rgb888(fb->buf, fb->len, fb->format, out_buf);
+    bool s = fmt2rgb888(fb->buf, fb->len, fb->format, out_buf);
     esp_camera_fb_return(fb);
     if(!s){
         dl_matrix3du_free(image_matrix);
@@ -154,11 +150,7 @@ static esp_err_t capture_handler(httpd_req_t *req){
 }
 
 static esp_err_t stream_handler(httpd_req_t *req){
-    camera_fb_t * fb = NULL;
     esp_err_t res = ESP_OK;
-    size_t _jpg_buf_len = 0;
-    uint8_t * _jpg_buf = NULL;
-    char * part_buf[64];
     int64_t fr_start = 0;
     int64_t fr_ready = 0;
     int64_t fr_encode = 0;
@@ -174,7 +166,9 @@ static esp_err_t stream_handler(httpd_req_t *req){
     }
 
     while(true){
-        fb = esp_camera_fb_get();
+        size_t _jpg_buf_len = 0;
+        uint8_t * _jpg_buf = NULL;
+        camera_fb_t *fb = esp_camera_fb_get();
         if (!fb) {
             Serial.println("Camera capture failed");
             res = ESP_FAIL;
@@ -196,6 +190,7 @@ static esp_err_t stream_handler(httpd_req_t *req){
             }
         }
         if(res == ESP_OK){
+            char * part_buf[64];
             size_t hlen = snprintf((char *)part_buf, 64, _STREAM_PART, _jpg_buf_len);
             res = httpd_resp_send_chunk(req, (const char *)part_buf, hlen);
         }
@@ -239,14 +234,12 @@ static esp_err_t stream_handler(httpd_req_t *req){
 }
 
 static esp_err_t cmd_handler(httpd_req_t *req){
-    char*  buf;
-    size_t buf_len;
     char variable[32] = {0,};
     char value[32] = {0,};
 
-    buf_len = httpd_req_get_url_query_len(req) + 1;
+    const size_t buf_len = httpd_req_get_url_query_len(req) + 1;
     if (buf_len > 1) {
-        buf = (char*)malloc(buf_len);
+        char* buf = (char*)malloc(buf_len);
         if(!buf){
             httpd_resp_send_500(req);
             return ESP_FAIL;
