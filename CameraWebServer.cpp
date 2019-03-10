@@ -139,6 +139,16 @@ void setup()
         delay(500);
         Serial.print(".");
     }
+    if (!MDNS.begin("esp32-cam")) {
+        Serial.println("Error setting up MDNS responder!");
+        while(1) {
+            delay(1000);
+        }
+    }
+
+    // Add service to MDNS-SD
+    MDNS.addService("http", "tcp", 80);
+
     Serial.println("");
     Serial.println("WiFi connected");
 
